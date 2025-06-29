@@ -33,6 +33,13 @@ Transform complex SEC filing data into clean, accessible financial insights for:
 - Comprehensive financial data endpoints
 - Real-time company comparisons
 
+🤖 **MCP Server (Natural Language Interface)**
+
+- Ask questions in plain English about financial data
+- Integrates with Claude, ChatGPT, and other AI assistants
+- Automatic report generation and trend analysis
+- No coding required - just conversational queries
+
 🏗️ **Production-Ready Architecture**
 
 - Docker containerization with health checks
@@ -76,6 +83,19 @@ uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
 **🎉 API now available at: http://localhost:8000**
 
 **📚 Interactive docs: http://localhost:8000/docs**
+
+### **4. Start MCP Server (Natural Language Interface)**
+
+```bash
+# Start MCP server for AI assistant integration
+python scripts/run_mcp_server.py
+```
+
+**🤖 Now ask questions like:**
+
+- "What was Apple's revenue growth over the last 5 years?"
+- "Compare Tesla's profitability with Ford and GM"
+- "Generate a financial health report for Microsoft"
 
 ## 📊 **Usage Examples**
 
@@ -128,6 +148,26 @@ data = response.json()
 df = pd.json_normalize(data['data'])
 print(df[['value', 'fiscal_year']])
 ```
+
+### **MCP (Natural Language) Usage**
+
+```bash
+# Start MCP server
+python scripts/run_mcp_server.py
+
+# Connect with Claude Desktop, ChatGPT, or other MCP clients
+# Then ask natural language questions:
+```
+
+**Example Conversations:**
+
+- "Get me Apple's financial overview for the last 3 years"
+- "Compare the revenue growth of Apple, Microsoft, and Google"
+- "Analyze Tesla's financial trends over the past 10 years"
+- "Generate a comprehensive financial report for Amazon"
+- "What financial metrics are available for Netflix?"
+
+**📖 [Complete MCP Documentation](README_MCP.md)**
 
 ## 🏗️ **Architecture**
 

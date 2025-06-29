@@ -1,0 +1,35 @@
+{
+    "mcpServers": {
+        "sec-financial-pipeline": {
+            "command": "python",
+            "args": [
+                "scripts/run_mcp_server.py"
+            ],
+            "env": {},
+            "description": "SEC Financial Data Pipeline MCP Server - Provides natural language access to SEC financial data",
+            "capabilities": {
+                "tools": [
+                    "get_company_financials",
+                    "get_financial_metric",
+                    "compare_companies",
+                    "analyze_financial_trends",
+                    "generate_financial_report",
+                    "get_available_metrics"
+                ],
+                "resources": [
+                    "sec://companies/sp500",
+                    "sec://metrics/available"
+                ]
+            },
+            "examples": {
+                "queries": [
+                    "Get Apple's revenue for the last 5 years",
+                    "Compare the net income of Microsoft, Apple, and Google",
+                    "Analyze Tesla's financial trends over the past 10 years",
+                    "Generate a comprehensive financial report for Amazon",
+                    "What financial metrics are available for Netflix?"
+                ]
+            }
+        }
+    }
+}
