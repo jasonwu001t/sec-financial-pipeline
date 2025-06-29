@@ -45,7 +45,7 @@ Transform complex SEC filing data into clean, accessible financial insights for:
 ### **1. Installation**
 
 ```bash
-git clone https://github.com/yourusername/sec-financial-pipeline.git
+git clone https://github.com/jasonwu001t/sec-financial-pipeline.git
 cd sec-financial-pipeline
 
 # Create virtual environment
@@ -216,7 +216,7 @@ Key settings in `config/config.yaml`:
 ```yaml
 sec_api:
   rate_limit_requests_per_second: 10
-  user_agent: "your-app/1.0 (contact@yourcompany.com)"
+  user_agent: "sec-financial-pipeline/1.0 (jasonwu001t@gmail.com)"
 
 data_storage:
   base_path: "./data/company_facts"
@@ -250,8 +250,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 **Support**
 
 - 📖 **Documentation**: [README_PIPELINE.md](README_PIPELINE.md)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/sec-financial-pipeline/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/yourusername/sec-financial-pipeline/discussions)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/jasonwu001t/sec-financial-pipeline/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/jasonwu001t/sec-financial-pipeline/discussions)
 
 ---
 

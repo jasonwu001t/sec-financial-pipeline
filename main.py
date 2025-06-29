@@ -18,9 +18,9 @@ import requests
 
 # ─── Constants ──────────────────────────────────────────────────────────────────
 _USER_AGENT = (
-    "fin-analytics-demo/0.1 "
+    "sec-financial-pipeline/1.0 "
     "(Contact: jasonwu001t@gmail.com) "
-    "- https://www.sec.gov - compliant UA per SEC policy"
+    "- GitHub: jasonwu001t/sec-financial-pipeline"
 )
 _TICKERS_JSON = "https://www.sec.gov/files/company_tickers.json"
 _FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
