@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "sec-financial-pipeline": {
+            "command": "python",
+            "args": [
+                "scripts/run_mcp_server.py"
+            ],
+            "cwd": "/Users/jwu/Desktop/development/sec-financial-pipeline"
+        }
+    }
+}
