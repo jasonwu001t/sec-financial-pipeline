@@ -9,8 +9,8 @@ import io
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
-from ..core.models import CompanyData, FinancialFact, ReportingPeriod
-from ..etl.data_manager import DataManager
+from core.models import CompanyData, FinancialFact, ReportingPeriod
+from etl.data_manager import DataManager
 from .cache import CacheManager
 
 
@@ -356,7 +356,7 @@ class DataService:
 
 if __name__ == "__main__":
     # Test the data service
-    from ..etl.data_manager import DataManager
+    from etl.data_manager import DataManager
     from .cache import CacheManager
     import asyncio
     

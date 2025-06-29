@@ -12,8 +12,8 @@ import hashlib
 import pickle
 import sys
 
-from ..core.config import get_config
-from ..core.models import CacheEntry
+from core.config import get_config
+from core.models import CacheEntry
 
 
 class CacheManager:

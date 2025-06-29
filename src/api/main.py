@@ -15,13 +15,13 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 import logging
 
-from ..core.config import get_config, setup_logging
-from ..core.models import (
+from core.config import get_config, setup_logging
+from core.models import (
     FinancialDataResponse, MetricResponse, HealthCheckResponse, ErrorResponse,
     FinancialQuery, MetricQuery, ComparisonQuery, ReportingPeriod
 )
-from ..etl.pipeline import ETLPipeline, fetch_ticker_on_demand
-from ..etl.data_manager import DataManager
+from etl.pipeline import ETLPipeline, fetch_ticker_on_demand
+from etl.data_manager import DataManager
 from .cache import CacheManager
 from .data_service import DataService
 
@@ -326,7 +326,7 @@ async def trigger_ticker_fetch(
 async def trigger_full_refresh(background_tasks: BackgroundTasks):
     """Trigger full data refresh for all tickers."""
     try:
-        from ..etl.pipeline import run_full_data_refresh
+        from etl.pipeline import run_full_data_refresh
         
         background_tasks.add_task(run_full_data_refresh)
         
@@ -438,7 +438,7 @@ async def startup_event():
     await cache_manager.initialize()
     
     # Validate configuration
-    from ..core.config import config_manager
+    from core.config import config_manager
     config_manager.validate_config()
     
     logger.info(f"API server started on {config.api.host}:{config.api.port}")

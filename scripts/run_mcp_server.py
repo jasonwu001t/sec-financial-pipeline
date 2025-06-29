@@ -11,10 +11,12 @@ import sys
 import os
 from pathlib import Path
 
-# Add the src directory to the Python path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# Add the project root and src directory to the Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(project_root / "src"))
 
-from src.mcp.server import SECFinancialMCPServer
+from sec_mcp.server import SECFinancialMCPServer
 
 
 async def run_stdio_server():
@@ -80,6 +82,11 @@ def setup_logging(level: str = "INFO"):
 
 def main():
     """Main entry point."""
+    # Ensure we're in the project root directory
+    script_dir = Path(__file__).parent
+    project_root = script_dir.parent
+    os.chdir(project_root)
+    
     parser = argparse.ArgumentParser(
         description="SEC Financial Data MCP Server",
         formatter_class=argparse.RawDescriptionHelpFormatter,

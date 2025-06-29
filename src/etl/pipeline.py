@@ -11,9 +11,9 @@ from typing import List, Dict, Optional, Set
 from pathlib import Path
 import json
 
-from ..core.config import get_config, get_ticker_list
-from ..core.sec_client import SECAPIClient
-from ..core.models import ETLJob, ETLJobStatus, CompanyInfo, FinancialFact
+from core.config import get_config, get_ticker_list
+from core.sec_client import SECAPIClient
+from core.models import ETLJob, ETLJobStatus, CompanyInfo, FinancialFact
 from .data_manager import DataManager
 
 

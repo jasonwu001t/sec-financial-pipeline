@@ -15,8 +15,8 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from concurrent.futures import ThreadPoolExecutor
 
-from ..core.config import get_config
-from ..core.models import (
+from core.config import get_config
+from core.models import (
     CompanyInfo, FinancialFact, ParquetFile, DataFreshness,
     ReportingPeriod, CompanyData
 )
