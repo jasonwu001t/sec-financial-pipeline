@@ -10,13 +10,18 @@ import logging
 import sys
 from pathlib import Path
 
-# Add project root to Python path
+# Add project root and src to Python path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(project_root / "src"))
 
-from src.core.config import setup_logging, get_config
-from src.etl.pipeline import fetch_ticker_on_demand
-from src.etl.data_manager import DataManager
+# Change to project root directory
+import os
+os.chdir(project_root)
+
+from core.config import setup_logging, get_config
+from etl.pipeline import fetch_ticker_on_demand
+from etl.data_manager import DataManager
 
 
 @click.command()
