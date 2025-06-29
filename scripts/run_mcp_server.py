@@ -22,9 +22,22 @@ from sec_mcp.server import SECFinancialMCPServer
 async def run_stdio_server():
     """Run MCP server with stdio transport."""
     from mcp.server.stdio import stdio_server
+    from mcp.server.models import InitializationOptions
     
     server = SECFinancialMCPServer()
-    await server.run(stdio_server())
+    
+    # Use the stdio_server context manager properly
+    async with stdio_server() as streams:
+        from mcp.types import ServerCapabilities
+        await server.server.run(
+            streams[0],  # read_stream
+            streams[1],  # write_stream
+            initialization_options=InitializationOptions(
+                server_name="sec-financial-pipeline",
+                server_version="1.0.0",
+                capabilities=ServerCapabilities(tools={}, resources={})
+            )
+        )
 
 
 async def run_sse_server(host: str = "localhost", port: int = 8001):
@@ -33,14 +46,24 @@ async def run_sse_server(host: str = "localhost", port: int = 8001):
         from mcp.server.sse import sse_server
         
         server = SECFinancialMCPServer()
-        transport = sse_server(host, port)
         
         print(f"SEC Financial MCP Server starting on {host}:{port}")
         print(f"Server endpoints:")
         print(f"  SSE: http://{host}:{port}/sse")
         print(f"  Messages: http://{host}:{port}/messages")
         
-        await server.run(transport)
+        async with sse_server(host, port) as streams:
+            from mcp.server.models import InitializationOptions
+            from mcp.types import ServerCapabilities
+            await server.server.run(
+                streams[0],  # read_stream
+                streams[1],  # write_stream
+                initialization_options=InitializationOptions(
+                    server_name="sec-financial-pipeline",
+                    server_version="1.0.0",
+                    capabilities=ServerCapabilities(tools={}, resources={})
+                )
+            )
         
     except ImportError:
         print("SSE transport not available. Install with: pip install mcp[sse]")
@@ -53,11 +76,21 @@ async def run_websocket_server(host: str = "localhost", port: int = 8002):
         from mcp.server.websocket import websocket_server
         
         server = SECFinancialMCPServer()
-        transport = websocket_server(host, port)
         
         print(f"SEC Financial MCP Server starting on ws://{host}:{port}")
         
-        await server.run(transport)
+        async with websocket_server(host, port) as streams:
+            from mcp.server.models import InitializationOptions
+            from mcp.types import ServerCapabilities
+            await server.server.run(
+                streams[0],  # read_stream
+                streams[1],  # write_stream
+                initialization_options=InitializationOptions(
+                    server_name="sec-financial-pipeline",
+                    server_version="1.0.0",
+                    capabilities=ServerCapabilities(tools={}, resources={})
+                )
+            )
         
     except ImportError:
         print("WebSocket transport not available. Install with: pip install mcp[websocket]")

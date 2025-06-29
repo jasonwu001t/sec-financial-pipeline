@@ -24,6 +24,7 @@ from mcp.types import (
     Resource,
     Tool,
     TextContent,
+    TextResourceContents,
 )
 
 from core.models import ReportingPeriod, CompanyData, FinancialFact
@@ -222,18 +223,18 @@ class SECFinancialMCPServer:
                 metrics = self.data_service.get_available_metrics()
                 content = json.dumps(metrics, indent=2)
             else:
-                return ReadResourceResult(
-                    contents=[TextContent(type="text", text=f"Unknown resource: {uri}")]
-                )
+                            return ReadResourceResult(
+                contents=[TextResourceContents(uri=uri, text=f"Unknown resource: {uri}")]
+            )
             
             return ReadResourceResult(
-                contents=[TextContent(type="text", text=content)]
+                contents=[TextResourceContents(uri=uri, text=content)]
             )
             
         except Exception as e:
             self.logger.error(f"Error reading resource {uri}: {e}")
             return ReadResourceResult(
-                contents=[TextContent(type="text", text=f"Error reading resource: {str(e)}")]
+                contents=[TextResourceContents(uri=uri, text=f"Error reading resource: {str(e)}")]
             )
     
     # Tool implementation methods
@@ -617,9 +618,7 @@ class SECFinancialMCPServer:
         
         return [profitability_report]
     
-    async def run(self, transport):
-        """Run the MCP server."""
-        await self.server.run(transport)
+
 
 
 async def main():
