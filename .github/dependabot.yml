@@ -1,0 +1,43 @@
+version: 2
+updates:
+  # Keep pip dependencies up to date
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "jasonwu001t"
+    commit-message:
+      prefix: "🔒"
+      include: "scope"
+
+  # Keep GitHub Actions up to date
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "jasonwu001t"
+    commit-message:
+      prefix: "⚡"
+      include: "scope"
+
+  # Keep Docker dependencies up to date
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "jasonwu001t"
+    commit-message:
+      prefix: "🐳"
+      include: "scope"
