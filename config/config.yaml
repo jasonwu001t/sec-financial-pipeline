@@ -1,0 +1,59 @@
+# SEC Financial Data Pipeline Configuration
+---
+sec_api:
+  base_url: "https://data.sec.gov/api/xbrl/companyfacts"
+  tickers_url: "https://www.sec.gov/files/company_tickers.json"
+  user_agent: "SEC-Financial-Pipeline/1.0 (Contact: jasonwu001t@gmail.com) - Compliant with SEC Policy"
+  rate_limit:
+    requests_per_second: 10
+    concurrent_requests: 1
+  timeout: 30
+  retry_attempts: 3
+  retry_delay: 1
+
+data_storage:
+  base_path: "./data"
+  company_facts_path: "./data/company_facts"
+  parquet_compression: "snappy"
+  partition_strategy: "by_ticker_year" # by_ticker_year | by_year_ticker
+  file_naming:
+    annual: "{ticker}_{year}_annual.parquet"
+    quarterly: "{ticker}_{year}_Q{quarter}.parquet"
+
+etl:
+  default_tickers_source: "sp500" # sp500 | all | custom
+  batch_size: 50
+  incremental_check: true
+  skip_unchanged: true
+  max_concurrent_downloads: 5
+  data_retention_years: 15
+  schedule:
+    daily_refresh: "02:00" # UTC time
+    full_refresh: "Sunday 06:00" # Weekly full refresh
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  reload: false
+  workers: 4
+  title: "SEC Financial Data API"
+  description: "Production API for SEC financial data with incremental ETL pipeline"
+  version: "1.0.0"
+
+cache:
+  type: "memory" # memory | redis | disk
+  ttl: 3600 # seconds
+  max_size: 1000 # number of cached responses
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "./logs/pipeline.log"
+  max_size: "10MB"
+  backup_count: 5
+
+performance:
+  max_response_size_mb: 100
+  query_timeout: 30
+  enable_compression: true
+  cors_origins: ["*"]

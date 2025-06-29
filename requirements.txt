@@ -1,0 +1,62 @@
+# SEC Financial Data Pipeline Dependencies
+# Core FastAPI and web framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Data processing and storage
+pandas==2.1.3
+pyarrow==14.0.1
+numpy==1.24.3
+
+# HTTP client for SEC API
+aiohttp==3.9.1
+httpx==0.25.2
+requests==2.31.0
+
+# Data validation and serialization
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Configuration management
+PyYAML==6.0.1
+
+# Async support
+asyncio-mqtt==0.16.1
+aiofiles==23.2.1
+
+# Logging and monitoring
+structlog==23.2.0
+
+# Testing (development)
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+
+# Code quality (development)
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Documentation (development)
+sphinx==7.2.6
+sphinx-rtd-theme==1.3.0
+
+# Additional utilities
+python-dateutil==2.8.2
+click==8.1.7
+rich==13.7.0
+tqdm==4.66.1
+
+# Production deployment
+gunicorn==21.2.0
+psutil==5.9.6
+
+# Optional: Database support for future enhancements
+# sqlalchemy==2.0.23
+# alembic==1.13.0
+
+# Optional: Redis for distributed caching
+# redis==5.0.1
+# aioredis==2.0.1 
