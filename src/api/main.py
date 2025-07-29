@@ -25,6 +25,14 @@ from etl.data_manager import DataManager
 from .cache import CacheManager
 from .data_service import DataService
 
+# Import hedge fund router (import after other imports to avoid circular dependencies)
+try:
+    from .hedge_fund_endpoints import router as hedge_fund_router
+    HEDGE_FUND_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Hedge fund endpoints not available: {e}")
+    HEDGE_FUND_AVAILABLE = False
+
 
 # Setup logging
 logger = setup_logging()
@@ -58,6 +66,13 @@ data_manager = DataManager()
 cache_manager = CacheManager()
 data_service = DataService(data_manager, cache_manager)
 etl_pipeline = ETLPipeline()
+
+# Include hedge fund router if available
+if HEDGE_FUND_AVAILABLE:
+    app.include_router(hedge_fund_router)
+    logger.info("Hedge fund endpoints enabled")
+else:
+    logger.warning("Hedge fund endpoints disabled due to import errors")
 
 
 # Dependency to get data service

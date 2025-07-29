@@ -3,7 +3,7 @@ Data models for SEC Financial Data Pipeline.
 Defines Pydantic models for financial data structures and API responses.
 """
 
-from typing import Dict, List, Any, Optional, Union, Literal
+from typing import Dict, List, Any, Optional, Union, Literal, Tuple
 from datetime import datetime, date
 from decimal import Decimal
 from pydantic import BaseModel, Field, validator, root_validator
@@ -305,4 +305,147 @@ class ParquetFile(BaseModel):
     class Config:
         json_encoders = {
             datetime: lambda v: v.isoformat() if v else None
-        } 
+        }
+
+
+# 13F Filing Models
+
+class FilingType(str, Enum):
+    """SEC filing types."""
+    FORM_13F_HR = "13F-HR"
+    FORM_13F_NT = "13F-NT"
+    FORM_13F_COMBINATION = "13F-COMBINATION"
+    
+
+class HoldingType(str, Enum):
+    """Types of holdings in 13F filings."""
+    STOCK = "stock"
+    OPTION_PUT = "put"
+    OPTION_CALL = "call"
+    CONVERTIBLE = "convertible"
+    OTHER = "other"
+
+
+class InstitutionalHolding(BaseModel):
+    """Individual holding from 13F filing."""
+    cusip: str = Field(..., description="CUSIP identifier")
+    security_name: str = Field(..., description="Name of the security")
+    title_of_class: Optional[str] = Field(default=None, description="Class of security")
+    value: float = Field(..., description="Value in thousands of dollars")
+    shares: int = Field(..., description="Number of shares held")
+    share_type: Optional[HoldingType] = Field(default=HoldingType.STOCK)
+    investment_discretion: Optional[str] = Field(default=None, description="Investment discretion")
+    voting_authority_sole: Optional[int] = Field(default=None)
+    voting_authority_shared: Optional[int] = Field(default=None)
+    voting_authority_none: Optional[int] = Field(default=None)
+    
+    # Additional computed fields
+    avg_price_per_share: Optional[float] = Field(default=None, description="Computed average price per share")
+    percentage_of_portfolio: Optional[float] = Field(default=None, description="Percentage of total portfolio value")
+
+
+class Form13F(BaseModel):
+    """13F Filing data model."""
+    filing_manager_cik: str = Field(..., description="CIK of filing institution")
+    filing_manager_name: str = Field(..., description="Name of filing institution")
+    filing_id: str = Field(..., description="SEC filing accession number")
+    filing_type: FilingType = Field(default=FilingType.FORM_13F_HR)
+    period_end_date: date = Field(..., description="End date of reporting period")
+    filing_date: date = Field(..., description="Date filing was submitted to SEC")
+    
+    # Summary information
+    total_holdings_count: int = Field(..., description="Number of holdings")
+    total_value: float = Field(..., description="Total portfolio value in thousands")
+    
+    # Detailed holdings
+    holdings: List[InstitutionalHolding] = Field(default_factory=list)
+    
+    # Metadata
+    amendment: bool = Field(default=False, description="Whether this is an amendment")
+    confidential_omitted: bool = Field(default=False, description="Whether confidential treatment was requested")
+    sec_url: Optional[str] = Field(default=None, description="URL to SEC filing")
+    
+    class Config:
+        json_encoders = {
+            date: lambda v: v.isoformat() if v else None,
+            datetime: lambda v: v.isoformat() if v else None
+        }
+
+
+class HedgeFundManager(BaseModel):
+    """Hedge fund manager/institutional investment manager model."""
+    name: str = Field(..., description="Official name of the institution")
+    cik: str = Field(..., description="Central Index Key")
+    common_name: Optional[str] = Field(default=None, description="Common/popular name")
+    manager_type: str = Field(default="investment_manager", description="Type of manager")
+    
+    # Contact information
+    address: Optional[str] = Field(default=None)
+    city: Optional[str] = Field(default=None)
+    state: Optional[str] = Field(default=None)
+    zip_code: Optional[str] = Field(default=None)
+    
+    # Key personnel
+    key_personnel: List[str] = Field(default_factory=list, description="Notable managers/founders")
+    
+    # Portfolio metadata
+    latest_filing_date: Optional[date] = Field(default=None)
+    latest_total_value: Optional[float] = Field(default=None, description="Most recent AUM in thousands")
+    avg_holdings_count: Optional[int] = Field(default=None)
+    
+    @validator('cik')
+    def validate_cik(cls, v):
+        """Ensure CIK is 10 digits with leading zeros."""
+        if isinstance(v, str):
+            return v.zfill(10)
+        return str(v).zfill(10)
+
+
+class PortfolioAnalysis(BaseModel):
+    """Portfolio analysis for a hedge fund manager."""
+    manager: HedgeFundManager
+    analysis_period: str = Field(..., description="Period analyzed (e.g., 'Q1 2024')")
+    filings_analyzed: int = Field(..., description="Number of filings in analysis")
+    
+    # Top holdings analysis
+    top_holdings: List[InstitutionalHolding] = Field(default_factory=list)
+    new_positions: List[InstitutionalHolding] = Field(default_factory=list)
+    closed_positions: List[str] = Field(default_factory=list, description="CUSIPs of closed positions")
+    increased_positions: List[Tuple[str, float]] = Field(default_factory=list, description="CUSIP and % increase")
+    decreased_positions: List[Tuple[str, float]] = Field(default_factory=list, description="CUSIP and % decrease")
+    
+    # Portfolio metrics
+    portfolio_concentration: float = Field(..., description="Concentration ratio (top 10 holdings %)")
+    sector_diversification: Dict[str, float] = Field(default_factory=dict, description="Sector allocation percentages")
+    turnover_rate: Optional[float] = Field(default=None, description="Portfolio turnover rate")
+    
+    # Performance indicators
+    quarter_over_quarter_change: Optional[float] = Field(default=None, description="QoQ portfolio value change %")
+    
+    class Config:
+        json_encoders = {
+            date: lambda v: v.isoformat() if v else None,
+            datetime: lambda v: v.isoformat() if v else None
+        }
+
+
+# API Response Models for 13F
+
+class Form13FResponse(APIResponse):
+    """Response model for 13F filing endpoints."""
+    data: Union[Form13F, List[Form13F]]
+    manager_name: Optional[str] = None
+    period: Optional[str] = None
+
+
+class PortfolioAnalysisResponse(APIResponse):
+    """Response model for portfolio analysis endpoints."""
+    data: PortfolioAnalysis
+    manager_name: str
+    analysis_type: str
+
+
+class HedgeFundManagerResponse(APIResponse):
+    """Response model for hedge fund manager endpoints."""
+    data: Union[HedgeFundManager, List[HedgeFundManager]]
+    manager_count: Optional[int] = None 

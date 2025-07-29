@@ -18,7 +18,7 @@ from concurrent.futures import ThreadPoolExecutor
 from core.config import get_config
 from core.models import (
     CompanyInfo, FinancialFact, ParquetFile, DataFreshness,
-    ReportingPeriod, CompanyData
+    ReportingPeriod, CompanyData, Form13F, HedgeFundManager, InstitutionalHolding
 )
 
 
@@ -38,6 +38,11 @@ class DataManager:
         # Track file metadata
         self._parquet_files: Dict[str, List[ParquetFile]] = {}
         self._data_freshness: Dict[str, DataFreshness] = {}
+        
+        # 13F specific paths and metadata
+        self.hedge_fund_path = self.base_path / "hedge_funds"
+        self.hedge_fund_path.mkdir(parents=True, exist_ok=True)
+        self._hedge_fund_files: Dict[str, List[ParquetFile]] = {}
         
         # Load existing metadata
         self._load_metadata()
@@ -385,6 +390,183 @@ class DataManager:
     def list_available_tickers(self) -> List[str]:
         """List all tickers with available data."""
         return list(self._parquet_files.keys())
+    
+    # 13F Filing Methods
+    
+    def save_13f_filings(self, manager: HedgeFundManager, filings: List[Form13F]) -> List[ParquetFile]:
+        """Save 13F filings to parquet files."""
+        parquet_files = []
+        
+        for filing in filings:
+            try:
+                # Create filename based on manager and filing date
+                year = filing.period_end_date.year
+                quarter = self._get_quarter_from_date(filing.period_end_date)
+                filename = f"{manager.cik}_{year}_Q{quarter}_13F.parquet"
+                file_path = self.hedge_fund_path / manager.cik / filename
+                
+                # Ensure directory exists
+                file_path.parent.mkdir(parents=True, exist_ok=True)
+                
+                # Convert holdings to DataFrame
+                holdings_data = []
+                for holding in filing.holdings:
+                    holdings_data.append({
+                        'filing_id': filing.filing_id,
+                        'manager_cik': filing.filing_manager_cik,
+                        'manager_name': filing.filing_manager_name,
+                        'period_end_date': filing.period_end_date,
+                        'filing_date': filing.filing_date,
+                        'cusip': holding.cusip,
+                        'security_name': holding.security_name,
+                        'title_of_class': holding.title_of_class,
+                        'value': holding.value,
+                        'shares': holding.shares,
+                        'share_type': holding.share_type.value if holding.share_type else None,
+                        'investment_discretion': holding.investment_discretion,
+                        'voting_authority_sole': holding.voting_authority_sole,
+                        'voting_authority_shared': holding.voting_authority_shared,
+                        'voting_authority_none': holding.voting_authority_none,
+                        'avg_price_per_share': holding.avg_price_per_share,
+                        'percentage_of_portfolio': holding.percentage_of_portfolio
+                    })
+                
+                if holdings_data:
+                    df = pd.DataFrame(holdings_data)
+                    
+                    # Save to parquet with metadata
+                    table = pa.Table.from_pandas(df)
+                    metadata = {
+                        'manager_cik': manager.cik,
+                        'manager_name': manager.name,
+                        'filing_type': filing.filing_type.value,
+                        'period_end_date': filing.period_end_date.isoformat(),
+                        'filing_date': filing.filing_date.isoformat(),
+                        'total_holdings': str(filing.total_holdings_count),
+                        'total_value': str(filing.total_value),
+                        'created_at': datetime.utcnow().isoformat()
+                    }
+                    
+                    # Add metadata to schema
+                    table = table.replace_schema_metadata(metadata)
+                    
+                    pq.write_table(
+                        table, 
+                        file_path,
+                        compression=self.config.data_storage.parquet_compression
+                    )
+                    
+                    # Create parquet file metadata
+                    parquet_file = ParquetFile(
+                        file_path=str(file_path),
+                        ticker=manager.cik,  # Use CIK as identifier
+                        year=year,
+                        quarter=quarter,
+                        statement_type="13F",
+                        record_count=len(holdings_data),
+                        file_size_bytes=file_path.stat().st_size if file_path.exists() else None
+                    )
+                    
+                    parquet_files.append(parquet_file)
+                    
+                    # Track in metadata
+                    if manager.cik not in self._hedge_fund_files:
+                        self._hedge_fund_files[manager.cik] = []
+                    self._hedge_fund_files[manager.cik].append(parquet_file)
+                    
+                    self.logger.info(f"Saved 13F filing for {manager.name}: {filename}")
+                
+            except Exception as e:
+                self.logger.error(f"Failed to save 13F filing for {manager.name}: {e}")
+                continue
+        
+        # Save updated metadata
+        self._save_metadata()
+        return parquet_files
+    
+    def load_13f_filings(self, manager_cik: str, quarters: Optional[int] = None) -> List[Form13F]:
+        """Load 13F filings for a hedge fund manager."""
+        manager_cik = manager_cik.zfill(10)
+        
+        if manager_cik not in self._hedge_fund_files:
+            return []
+        
+        filings = []
+        parquet_files = self._hedge_fund_files[manager_cik]
+        
+        # Sort by year and quarter (most recent first)
+        parquet_files = sorted(parquet_files, key=lambda x: (x.year, x.quarter or 0), reverse=True)
+        
+        # Limit by quarters if specified
+        if quarters:
+            parquet_files = parquet_files[:quarters]
+        
+        for parquet_file in parquet_files:
+            try:
+                file_path = Path(parquet_file.file_path)
+                if file_path.exists():
+                    df = pd.read_parquet(file_path)
+                    
+                    # Group by filing to reconstruct Form13F objects
+                    filing_groups = df.groupby('filing_id')
+                    
+                    for filing_id, filing_df in filing_groups:
+                        # Get filing metadata from first row
+                        first_row = filing_df.iloc[0]
+                        
+                        # Create holdings
+                        holdings = []
+                        for _, row in filing_df.iterrows():
+                            holding = InstitutionalHolding(
+                                cusip=row['cusip'],
+                                security_name=row['security_name'],
+                                title_of_class=row.get('title_of_class'),
+                                value=row['value'],
+                                shares=row['shares'],
+                                share_type=row.get('share_type'),
+                                investment_discretion=row.get('investment_discretion'),
+                                voting_authority_sole=row.get('voting_authority_sole'),
+                                voting_authority_shared=row.get('voting_authority_shared'),
+                                voting_authority_none=row.get('voting_authority_none'),
+                                avg_price_per_share=row.get('avg_price_per_share'),
+                                percentage_of_portfolio=row.get('percentage_of_portfolio')
+                            )
+                            holdings.append(holding)
+                        
+                        # Create Form13F object
+                        filing = Form13F(
+                            filing_manager_cik=first_row['manager_cik'],
+                            filing_manager_name=first_row['manager_name'],
+                            filing_id=filing_id,
+                            period_end_date=pd.to_datetime(first_row['period_end_date']).date(),
+                            filing_date=pd.to_datetime(first_row['filing_date']).date(),
+                            total_holdings_count=len(holdings),
+                            total_value=sum(h.value for h in holdings),
+                            holdings=holdings
+                        )
+                        
+                        filings.append(filing)
+                        
+            except Exception as e:
+                self.logger.error(f"Failed to load 13F filing from {parquet_file.file_path}: {e}")
+                continue
+        
+        return filings
+    
+    def list_available_hedge_funds(self) -> List[str]:
+        """List all hedge fund managers with available 13F data."""
+        return list(self._hedge_fund_files.keys())
+    
+    def get_13f_data_freshness(self, manager_cik: str) -> Optional[date]:
+        """Get the latest filing date for a hedge fund manager."""
+        filings = self.load_13f_filings(manager_cik, quarters=1)
+        if filings:
+            return max(filing.filing_date for filing in filings)
+        return None
+    
+    def _get_quarter_from_date(self, date_obj: date) -> int:
+        """Get quarter number from date."""
+        return (date_obj.month - 1) // 3 + 1
     
     def get_ticker_file_info(self, ticker: str) -> List[ParquetFile]:
         """Get file information for a ticker."""

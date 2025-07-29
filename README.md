@@ -13,6 +13,7 @@
 Transform complex SEC filing data into clean, accessible financial insights for:
 
 - **Investment Research & Analysis** 📈
+- **Hedge Fund Portfolio Tracking** 🏦
 - **Financial Dashboard Development** 🖥️
 - **Regulatory Compliance & Reporting** 📊
 - **Data Science & Machine Learning** 🤖
@@ -32,6 +33,14 @@ Transform complex SEC filing data into clean, accessible financial insights for:
 - Multiple output formats: JSON, CSV, Parquet
 - Comprehensive financial data endpoints
 - Real-time company comparisons
+
+🏦 **Hedge Fund 13F Analysis (NEW!)**
+
+- Track famous hedge fund managers (Berkshire Hathaway, Bridgewater, etc.)
+- Analyze institutional investment portfolios from 13F filings
+- Portfolio change detection and trend analysis
+- Specialized handlers for individual fund managers
+- Warren Buffett/Berkshire Hathaway deep analysis tools
 
 🤖 **MCP Server (Natural Language Interface)**
 
