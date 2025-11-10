@@ -22,7 +22,7 @@ pydantic-settings==2.1.0
 PyYAML==6.0.1
 
 # Async support
-asyncio-mqtt==0.16.1
+asyncio-mqtt==0.16.2
 aiofiles==23.2.1
 
 # Logging and monitoring
